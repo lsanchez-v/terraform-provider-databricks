@@ -52,6 +52,8 @@ func importContextForTest() *importContext {
 		emittedUsers:             map[string]struct{}{},
 		userOrSpDirectories:      map[string]bool{},
 		defaultChannel:           make(resourceChannel, defaultChannelSize),
+		services:                 map[string]struct{}{},
+		listing:                  map[string]struct{}{},
 	}
 }
 

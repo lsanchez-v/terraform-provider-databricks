@@ -263,6 +263,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		ignoredResources:         map[string]struct{}{},
 		emittedUsers:             map[string]struct{}{},
 		userOrSpDirectories:      map[string]bool{},
+		services:                 map[string]struct{}{},
+		listing:                  map[string]struct{}{},
 	}
 }
 
