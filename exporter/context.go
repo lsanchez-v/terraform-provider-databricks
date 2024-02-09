@@ -91,7 +91,7 @@ type importContext struct {
 	mounts                   bool
 	noFormat                 bool
 	services                 map[string]struct{}
-	listing                  string
+	listing                  map[string]struct{}
 	match                    string
 	lastActiveDays           int64
 	lastActiveMs             int64
@@ -310,8 +310,8 @@ func (ic *importContext) Run() error {
 		ic.updatedSinceMs = tm.UnixMilli()
 	}
 
-	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services",
-		ic.Module, ic.Directory, maps.Keys(ic.services))
+	log.Printf("[INFO] Importing %s module into %s directory Databricks resources of %s services. Listing %s",
+		ic.Module, ic.Directory, maps.Keys(ic.services), maps.Keys(ic.listing))
 
 	ic.notebooksFormat = strings.ToUpper(ic.notebooksFormat)
 	_, supportedFormat := fileExtensionFormatMapping[ic.notebooksFormat]
@@ -372,7 +372,8 @@ func (ic *importContext) Run() error {
 		if ir.List == nil {
 			continue
 		}
-		if !strings.Contains(ic.listing, ir.Service) {
+		_, exists := ic.listing[ir.Service]
+		if !exists {
 			log.Printf("[DEBUG] %s (%s service) is not part of listing", resourceName, ir.Service)
 			continue
 		}
@@ -729,8 +730,8 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 	resourcesChan := make(resourceChannel, defaultChannelSize)
 
 	resourceWriters := make(map[string]dataWriteChannel, len(ic.Resources))
-	for _, imp := range ic.Importables {
-		resourceWriters[imp.Service] = make(dataWriteChannel, defaultChannelSize)
+	for service := range ic.services {
+		resourceWriters[service] = make(dataWriteChannel, defaultChannelSize)
 	}
 	importChan := make(importWriteChannel, defaultChannelSize)
 	//
