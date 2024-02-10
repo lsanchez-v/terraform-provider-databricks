@@ -2307,8 +2307,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
-		// TODO: add Depends & Import to emit corresponding UC Volumes, Connections, etc. when support for them is added
-		// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		Depends: []reference{
+			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
+			// TODO: reference from `storage_root` to the external location using MatchPrefix?
+		},
 		// TODO: convert `main` catalog into the data source as it's automatically created?
 		//   This will require addition of the databricks_catalog data source
 	},
@@ -2399,7 +2401,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_grants": {
 		WorkspaceLevel: true,
-		Service:        "uc-grants", // TODO: use uc-volumes?
+		Service:        "uc-grants",
 		// TODO: Should we try to make name unique?
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit principals? See comment for the owner...
@@ -2409,15 +2411,40 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.Data.Get("grant.#").(int) == 0
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-		},
 		Depends: []reference{
 			{Path: "catalog", Resource: "databricks_catalog"},
 			{Path: "schema", Resource: "databricks_schema"},
 			{Path: "volume", Resource: "databricks_volume"},
+			{Path: "foreign_connection", Resource: "databricks_connection"},
 			//			{Path: "", Resource: ""},
-			//			{Path: "", Resource: ""},
+		},
+	},
+	"databricks_connection": {
+		WorkspaceLevel: true,
+		Service:        "uc-connections",
+		Name: func(ic *importContext, d *schema.ResourceData) string {
+			connectionName := d.Get("name").(string)
+			connectionType := d.Get("connection_type").(string)
+			if connectionName == "" && connectionType == "" {
+				return d.Id()
+			}
+			return connectionType + "_" + connectionName
+		},
+		// TODO: think what to do with the sensitive fields in the `options`?
+		Import: func(ic *importContext, r *resource) error {
+			// TODO: do we need to emit the owner See comment for the owner...
+			connectionName := r.Data.Get("name").(string)
+			ic.Emit(&resource{
+				Resource: "databricks_grants",
+				ID:       "foreign_connection/" + connectionName,
+			})
+			return nil
+		},
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "owner" {
+				return d.Get(pathString).(string) != ""
+			}
+			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 	},
 }
