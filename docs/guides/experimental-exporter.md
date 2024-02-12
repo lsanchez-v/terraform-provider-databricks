@@ -84,7 +84,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-connections` -  [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
 * `uc-grants` -  [databricks_grants](../resources/grants.md)
 * `uc-schemas` -  [databricks_schema](../resources/schema.md)
-* `uc-shares` - [databricks_share](../resources/share.md)
+* `uc-shares` - [databricks_share](../resources/share.md) and [databricks_recipient](../resources/recipient.md)
 * `uc-system-schemas` - exports [databricks_system_schema](../resources/system_schema.md) resources for the UC metastore of the current workspace.
 * `uc-volumes` -  [databricks_volume](../resources/volume.md)
 * `users` - [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
